@@ -327,8 +327,8 @@ public class Main extends JavaPlugin {
 		
 		// Check for permissions
 		
-		final boolean permissionEnabled = config.getBoolean("permission.enabled", false);
-		final String permission = "ssx.open." + configName;
+		final boolean permissionEnabled = config.getBoolean("permission.use", false);
+		final String permission = "ssx.open." + configName.replace(".yml", "").replace(".yaml", "");
 		
 		if (permissionEnabled && !player.hasPermission(permission)) {
 			if (config.contains("permission.message")) {

@@ -1,5 +1,5 @@
-# Please see this wiki article for an explanation for every option in this config
-# https://github.com/ServerSelectorX/ServerSelectorX/wiki/Premium-menu-items-2.0.0
+# See this wiki article for an explanation for every option in this config
+# https://github.com/ServerSelectorX/ServerSelectorX/wiki/Premium-menu-config-2.0.0
 
 title: 'Server Selector'
 rows: 2
@@ -21,8 +21,9 @@ commands:
  - servers
  
 #permission:
-#  enabled: true
+#  use: true
 #  message: '&cYou do not have permisison to open this menu.'
+#  item: false
 
 url-message: '&3&lClick here'
 
@@ -42,7 +43,7 @@ menu:
        - 'Game status: {status}'
 
     offline:
-      item: WOODEN_SWORD
+      item: WOOD_SWORD
       name: '&cKitPvP Server'
       lore:
        - 'Ipsum lorem'

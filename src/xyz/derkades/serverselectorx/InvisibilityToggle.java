@@ -11,7 +11,6 @@ public class InvisibilityToggle {
 	
 	public static List<UUID> INVISIBILITY_ON = new ArrayList<>();
 	
-	@SuppressWarnings("deprecation")
 	public static void showOthers(Player player) {
 		for (Player online : Bukkit.getOnlinePlayers()) {
 			if (online.getUniqueId() == player.getUniqueId()) {
@@ -19,7 +18,7 @@ public class InvisibilityToggle {
 			}
 			
 			try {
-				player.showPlayer(Main.getPlugin(), online);
+				player.showPlayer(online);
 			} catch (NoSuchMethodError e) {
 				player.showPlayer(online);
 			}
@@ -28,7 +27,6 @@ public class InvisibilityToggle {
 		INVISIBILITY_ON.remove(player.getUniqueId());
 	}
 	
-	@SuppressWarnings("deprecation")
 	public static void hideOthers(Player player) {
 		for (Player online : Bukkit.getOnlinePlayers()) {
 			if (online.getUniqueId() == player.getUniqueId()) {
@@ -36,7 +34,7 @@ public class InvisibilityToggle {
 			}
 			
 			try {
-				player.hidePlayer(Main.getPlugin(), online);
+				player.hidePlayer(online);
 			} catch (NoSuchMethodError e) {
 				player.hidePlayer(online);
 			}

@@ -32,7 +32,6 @@ import xyz.derkades.derkutils.bukkit.menu.OptionClickEvent;
 public class SelectorMenu extends IconMenu {
 	
 	private FileConfiguration config;
-	//private String configName;
 	private Player player;
 	private int slots;
 	
@@ -41,7 +40,6 @@ public class SelectorMenu extends IconMenu {
 	public SelectorMenu(Player player, FileConfiguration config, String configName) {
 		super(Main.getPlugin(), Colors.parseColors(config.getString("title", UUID.randomUUID().toString())), 9, player);
 		this.config = config;
-		//this.configName = configName;
 		this.player = player;
 		
 		this.slots = config.getInt("rows", 6) * 9;

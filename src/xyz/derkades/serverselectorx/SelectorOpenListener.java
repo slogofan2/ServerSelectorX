@@ -9,18 +9,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 public class SelectorOpenListener implements Listener {
 
-	@SuppressWarnings("deprecation")
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onInteract(final PlayerInteractEvent event){
-		if (event.getHand() == EquipmentSlot.OFF_HAND) {
-			return;
-		}
-
 		final FileConfiguration globalConfig = Main.getConfigurationManager().getGlobalConfig();
 
 		if (event.isCancelled() && globalConfig.getBoolean("ignore-cancelled", false)) {
