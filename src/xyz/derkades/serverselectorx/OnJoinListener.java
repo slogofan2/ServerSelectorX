@@ -19,7 +19,8 @@ public class OnJoinListener implements Listener {
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onJoin(final PlayerJoinEvent event) {
-		if (Main.getConfigurationManager().getSSXConfig().getBoolean("disable-items")) {
+		final FileConfiguration ssxConf = Main.getConfigurationManager().getSSXConfig();
+		if (ssxConf.getBoolean("config-sync.disable-items") && ssxConf.getBoolean("config-sync.enabled")) {
 			return;
 		}
 
