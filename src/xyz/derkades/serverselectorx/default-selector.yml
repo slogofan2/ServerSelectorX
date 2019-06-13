@@ -10,6 +10,7 @@ item:
   lore:
    - 'Right click this item to select a server'
   material: COMPASS
+  data: 0
   on-join: 
     enabled: true
     inv-slot: 0
