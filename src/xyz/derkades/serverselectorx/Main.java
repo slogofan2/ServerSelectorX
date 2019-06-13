@@ -332,7 +332,7 @@ public class Main extends JavaPlugin {
 		
 		if (permissionEnabled && !player.hasPermission(permission)) {
 			if (config.contains("permission.message")) {
-				String message = config.getString("permission.message");
+				String message = config.getString("permission.message", "");
 				if (!message.equals("")) {
 					player.sendMessage(Colors.parseColors(message));
 				}
