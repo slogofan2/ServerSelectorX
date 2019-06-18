@@ -105,19 +105,27 @@ public class SelectorMenu extends IconMenu {
 						boolean dynamicMatchFound = false;
 
 						if (section.contains("dynamic")) {
-							for (final String dynamic : section.getConfigurationSection("dynamic").getKeys(false)) {
-								final String placeholder = dynamic.split(":")[0];
-								final String result = dynamic.split(":")[1];
+							for (final String dynamicKey : section.getConfigurationSection("dynamic").getKeys(false)) {
+								final String placeholder = dynamicKey.split(":")[0];
+								final String placeholderValueInConfig = dynamicKey.split(":")[1];
+								final String placeholderValueFromConnector = placeholders.get(placeholder);
 
 								if (!placeholders.containsKey(placeholder)) {
 									Main.getPlugin().getLogger().warning("Dynamic feature contains rule with placeholder " + placeholder + " which has not been received from the server.");
 									continue;
 								}
 
-								if (placeholders.get(placeholder).equals(result)) {
+								final ConfigurationSection dynamicSection = section.getConfigurationSection("dynamic." + dynamicKey);
+
+								final String mode = dynamicSection.getString("mode", "equals");
+
+								if (
+										(mode.equals("equals") && placeholders.get(placeholder).equals(placeholderValueInConfig)) ||
+										(mode.equals("less") && Double.parseDouble(placeholderValueInConfig) < Double.parseDouble(placeholderValueFromConnector)) ||
+										(mode.equals("less") && Double.parseDouble(placeholderValueInConfig) > Double.parseDouble(placeholderValueFromConnector))
+										) {
 									//Placeholder result matches with placeholder result in rule
 									dynamicMatchFound = true;
-									final ConfigurationSection dynamicSection = section.getConfigurationSection("dynamic." + dynamic);
 
 									materialString = dynamicSection.getString("item");
 									data = dynamicSection.getInt("data", 0);
