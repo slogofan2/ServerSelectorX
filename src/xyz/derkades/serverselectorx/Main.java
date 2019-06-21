@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
@@ -53,8 +54,8 @@ public class Main extends JavaPlugin {
 
 	public static Placeholders PLACEHOLDER_API;
 
-	/** <server, <placeholder, result>> */
-	public static final Map<String, Map<String, String>> PLACEHOLDERS = new HashMap<>();
+	/* <server, <player uuid (may be null), <placeholder, result>>> */
+	public static final Map<String, Map<UUID, Map<String, String>>> PLACEHOLDERS = new HashMap<>();
 	public static final Map<String, Long> LAST_INFO_TIME = new HashMap<>();
 
 	private static ConfigurationManager configurationManager;
