@@ -95,10 +95,10 @@ public class Main extends JavaPlugin {
 		//Check if PlaceHolderAPI is installed
 		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")){
 			Main.PLACEHOLDER_API = new PlaceholdersEnabled();
-			this.getLogger().log(Level.INFO, "PlaceholderAPI is found. Placeholders will work!");
+			//this.getLogger().log(Level.INFO, "PlaceholderAPI is found. Placeholders will work!");
 		} else {
 			Main.PLACEHOLDER_API = new PlaceholdersDisabled();
-			this.getLogger().log(Level.INFO, "PlaceholderAPI is not installed. The plugin will still work.");
+			//this.getLogger().log(Level.INFO, "PlaceholderAPI is not installed. The plugin will still work.");
 		}
 
 		//Periodically clean cache
