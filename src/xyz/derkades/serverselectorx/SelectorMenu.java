@@ -12,6 +12,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -25,6 +26,8 @@ import xyz.derkades.derkutils.ListUtils;
 import xyz.derkades.derkutils.Random;
 import xyz.derkades.derkutils.bukkit.Colors;
 import xyz.derkades.derkutils.bukkit.ItemBuilder;
+import xyz.derkades.derkutils.bukkit.PlaceholderUtil;
+import xyz.derkades.derkutils.bukkit.PlaceholderUtil.Placeholder;
 import xyz.derkades.derkutils.bukkit.menu.IconMenu;
 import xyz.derkades.derkutils.bukkit.menu.MenuCloseEvent;
 import xyz.derkades.derkutils.bukkit.menu.OptionClickEvent;
@@ -100,7 +103,7 @@ public class SelectorMenu extends IconMenu {
 					}
 
 					if (Main.isOnline(serverName)) {
-						final Map<String, String> placeholders = Main.PLACEHOLDERS.get(serverName);
+						final Map<UUID, Map<String, String>> playerPlaceholders = Main.PLACEHOLDERS.get(serverName);
 
 						boolean dynamicMatchFound = false;
 
@@ -108,9 +111,17 @@ public class SelectorMenu extends IconMenu {
 							for (final String dynamicKey : section.getConfigurationSection("dynamic").getKeys(false)) {
 								final String placeholder = dynamicKey.split(":")[0];
 								final String placeholderValueInConfig = dynamicKey.split(":")[1];
-								final String placeholderValueFromConnector = placeholders.get(placeholder);
+								//final String placeholderValueFromConnector = placeholders.get(placeholder).get(null);
 
-								if (!placeholders.containsKey(placeholder)) {
+								final String placeholderValueFromConnector;
+
+								if (playerPlaceholders.get(null).containsKey(placeholder))
+								{ // Global placeholder
+									placeholderValueFromConnector = playerPlaceholders.get(null).get(placeholder);
+								} else if (playerPlaceholders.get(this.player.getUniqueId()).containsKey(placeholder))
+								{ // Player specific placeholder
+									placeholderValueFromConnector = playerPlaceholders.get(this.player.getUniqueId()).get(placeholder);
+								} else {
 									Main.getPlugin().getLogger().warning("Dynamic feature contains rule with placeholder " + placeholder + " which has not been received from the server.");
 									continue;
 								}
@@ -120,7 +131,7 @@ public class SelectorMenu extends IconMenu {
 								final String mode = dynamicSection.getString("mode", "equals");
 
 								if (
-										(mode.equals("equals") && placeholders.get(placeholder).equals(placeholderValueInConfig)) ||
+										(mode.equals("equals") && placeholderValueInConfig.equals(placeholderValueInConfig)) ||
 										(mode.equals("less") && Double.parseDouble(placeholderValueInConfig) < Double.parseDouble(placeholderValueFromConnector)) ||
 										(mode.equals("less") && Double.parseDouble(placeholderValueInConfig) > Double.parseDouble(placeholderValueFromConnector))
 										) {
@@ -145,23 +156,28 @@ public class SelectorMenu extends IconMenu {
 							enchanted = section.getBoolean("online.enchanted", false);
 						}
 
-						for (final Map.Entry<String, String> placeholder : placeholders.entrySet()) {
-							final List<String> newLore = new ArrayList<>();
-							for (final String string : lore) {
-								newLore.add(string.replace("{" + placeholder.getKey() + "}", placeholder.getValue()));
-							}
-							lore = newLore;
+						final List<Placeholder> placeholders = new ArrayList<>();
 
-							name = name.replace("{" + placeholder.getKey() + "}", placeholder.getValue());
+						// Add global placeholders to list (uuid = null)
+						playerPlaceholders.get(null).forEach((k, v) -> {
+							placeholders.add(new Placeholder("{" + k + "}", v));
+						});
+
+						// If there are any player specific placeholders for this player, parse them too
+						if (playerPlaceholders.containsKey(this.player.getUniqueId())) {
+							playerPlaceholders.get(this.player.getUniqueId()).forEach((k, v) -> {
+								placeholders.add(new Placeholder("{" + k + "}", v));
+							});
 						}
 
+						// Now parse the collected placeholders and papi placeholders in name and lore
+
+						name = PlaceholderUtil.parsePlaceholders(name, placeholders.toArray(new Placeholder[] {}));
+						lore = PlaceholderUtil.parsePlaceholders(lore, placeholders.toArray(new Placeholder[] {}));
+
+						// Set item amount if dynamic item count is enabled
 						if (section.getBoolean("dynamic-item-count", false)) {
-							if (!placeholders.containsKey("online")) { //Check for very old SSX-Connector versions. Can be removed soon.
-								Main.getPlugin().getLogger().warning("Dynamic item count is enabled but player count is unknown.");
-								Main.getPlugin().getLogger().warning("Is the PlayerCount addon installed?");
-							} else {
-								amount = Integer.parseInt(placeholders.get("online"));
-							}
+							amount = Integer.parseInt(playerPlaceholders.get(null).get("online"));
 						} else {
 							amount = section.getInt("item-count", 1);
 						}
@@ -191,13 +207,8 @@ public class SelectorMenu extends IconMenu {
 
 						final String serverName = subAction.substring(4);
 
-						if (!Main.PLACEHOLDERS.containsKey(serverName)) {
-							continue;
-						}
-
-						final Map<String, String> placeholders = Main.PLACEHOLDERS.get(serverName);
-						if (placeholders.containsKey("online")) {
-							totalOnline += Integer.parseInt(placeholders.get("online"));
+						if (Main.isOnline(serverName)) {
+							totalOnline += Integer.parseInt(Main.PLACEHOLDERS.get(serverName).get(null).get("online"));
 						}
 					}
 
@@ -216,63 +227,72 @@ public class SelectorMenu extends IconMenu {
 				}
 			}
 
-			// If data is set to -1, randomize data
-			if (data < 0) {
-				data = Random.getRandomInteger(0, 15);
+			// If the resulting item is NONE, skip adding this item
+			if (materialString == "NONE") {
+				continue;
 			}
 
-			if (materialString != "NONE") {
-				final ItemBuilder builder;
+			final ItemBuilder builder;
 
-				if (materialString.startsWith("head:")) {
-					final String owner = materialString.split(":")[1];
-					if (owner.equals("auto")) {
-						builder = new ItemBuilder(this.player.getName());
-					} else {
-						builder = new ItemBuilder(owner);
-					}
+			if (materialString.startsWith("head:")) {
+				final String owner = materialString.split(":")[1];
+				if (owner.equals("auto")) {
+					builder = new ItemBuilder(this.player.getName());
 				} else {
-
-					Material material;
-					try {
-						material = Material.valueOf(materialString);
-					} catch (final IllegalArgumentException e) {
-						this.player.sendMessage("Invalid item name '" + materialString + "'");
-						return;
-					}
-
-					builder = new ItemBuilder(material);
-					builder.damage(data);
+					builder = new ItemBuilder(owner);
+				}
+			} else {
+				Material material;
+				try {
+					material = Material.valueOf(materialString);
+				} catch (final IllegalArgumentException e) {
+					this.player.sendMessage("Invalid item name '" + materialString + "'");
+					return;
 				}
 
-				name = name.replace("{player}", this.player.getName()).replace("{globalOnline}", "" + Main.getGlobalPlayerCount());
-				lore = ListUtils.replaceInStringList(lore,
-						new Object[] {"{player}", "{globalOnline}"},
-						new Object[] {this.player.getName(), Main.getGlobalPlayerCount()});
+				builder = new ItemBuilder(material);
 
-				if (amount < 1 || amount > 64) amount = 1;
-
-				builder.amount(amount);
-				builder.name(Main.PLACEHOLDER_API.parsePlaceholders(this.player, name));
-				builder.lore(Main.PLACEHOLDER_API.parsePlaceholders(this.player, lore));
-
-				final int slot = Integer.valueOf(key);
-
-				ItemStack item = builder.create();
-
-				if (enchanted) item = Main.addGlow(item);
-
-				if (section.getBoolean("hide-flags", false)) item = Main.addHideFlags(item);
-
-				if (slot < 0) {
-					for (int i = 0; i < this.slots; i++) {
-						if (!this.items.containsKey(i)) {
-							this.items.put(i, item);
-						}
-					}
-				} else {
-					this.items.put(slot, item);
+				// If data is set to -1, randomize data
+				if (data < 0) {
+					data = Random.getRandomInteger(0, 15);
 				}
+				builder.damage(data);
+			}
+
+			final Placeholder playerPlaceholder = new Placeholder("{player}", this.player.getName());
+			final Placeholder globalOnlinePlaceholder = new Placeholder("globalOnline}", Main.getGlobalPlayerCount() + "");
+
+			name = PlaceholderUtil.parsePapiPlaceholders(name, this.player, playerPlaceholder, globalOnlinePlaceholder);
+			lore = PlaceholderUtil.parsePapiPlaceholders(lore, this.player, playerPlaceholder, globalOnlinePlaceholder);
+
+			// Fix unsafe amounts, then apply amounts
+			if (amount < 1 || amount > 64) amount = 1;
+			builder.amount(amount);
+
+			ItemStack item = builder.create();
+
+			if (enchanted) item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+
+			if (section.getBoolean("hide-flags", false)) item = Main.addHideFlags(item);
+
+			final int slot = Integer.valueOf(key);
+
+			if (slot > this.slots - 1) {
+				this.player.sendMessage("You put an item in slot " + slot + ", which is higher than the maximum number of slots in your menu.");
+				this.player.sendMessage("Increase the number of rows in the config");
+				return;
+			}
+
+			if (slot < 0) {
+				// Slot is set to -1 (or other negative value), fill all blank slots
+				for (int i = 0; i < this.slots; i++) {
+					if (!this.items.containsKey(i)) {
+						this.items.put(i, item);
+					}
+				}
+			} else {
+				// Slot is set to a positive value, put item in slot.
+				this.items.put(slot, item);
 			}
 		}
 	}
@@ -289,7 +309,7 @@ public class SelectorMenu extends IconMenu {
 			actions = this.config.getStringList("menu." + slot + ".action");
 
 			if (actions.isEmpty()) {
-				actions.add("msg:Action list found, but list is empty");
+				actions.add("msg:No actions specified. If you don't want anything to happen, use the action 'none'");
 			}
 		} else {
 			// Action is not a list or might not exist

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -69,21 +70,26 @@ public class PlaceholderReceiver extends HttpServlet {
 		final
 		Map<String, String> receivedPlaceholders = gson.fromJson(placeholdersJsonString, genericSample.getClass());
 
-		final Map<String, Map<String, String>> placeholders = new HashMap<>();
+		final Map<UUID, Map<String, String>> placeholders = new HashMap<>();
 
 		// These received placeholders are not player specific
 		// Store them for UUID 'null'
 		placeholders.put(null, receivedPlaceholders);
 
 		// Now check if SSX-Connector has sent any player-specific placeholders
-		final String playerPlaceholdersJsonString request.getParameter("data_player");
+		final String playerPlaceholdersJsonString = request.getParameter("data_player");
 		if (playerPlaceholdersJsonString != null) {
 			@SuppressWarnings("unchecked")
 			final Map<String, String> receivedPlayerPlaceholders = gson.fromJson(placeholdersJsonString, genericSample.getClass());
-			placeholders.put(key, value)
+			if (!receivedPlayerPlaceholders.containsKey("_uuid")) {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				return;
+			}
+			final UUID uuid = UUID.fromString(receivedPlayerPlaceholders.remove("_uuid"));
+			placeholders.put(uuid, receivedPlayerPlaceholders);
 		}
 
-		Main.PLACEHOLDERS.put(serverName, serverName, placeholders);
+		Main.PLACEHOLDERS.put(serverName, placeholders);
 
 		Main.LAST_INFO_TIME.put(serverName, System.currentTimeMillis());
 	}
