@@ -228,7 +228,7 @@ public class SelectorMenu extends IconMenu {
 			}
 
 			// If the resulting item is NONE, skip adding this item
-			if (materialString == "NONE") {
+			if (materialString.equalsIgnoreCase("NONE")) {
 				continue;
 			}
 
