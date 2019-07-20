@@ -17,15 +17,19 @@ import org.bukkit.potion.PotionEffectType;
 
 public class OnJoinListener implements Listener {
 
-	@EventHandler(priority = EventPriority.LOW)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onJoin(final PlayerJoinEvent event) {
-		final FileConfiguration ssxConf = Main.getConfigurationManager().getSSXConfig();
-		if (ssxConf.getBoolean("config-sync.disable-items") && ssxConf.getBoolean("config-sync.enabled")) {
-			return;
-		}
-
 		final Player player = event.getPlayer();
-
+		final FileConfiguration global = Main.getConfigurationManager().getGlobalConfig();
+		
+		if (global.getBoolean("clear-inv", false) && !player.hasPermission("ssx.clearinvbypass")) {
+			event.getPlayer().getInventory().clear();
+		}
+		
+		final FileConfiguration ssxConf = Main.getConfigurationManager().getSSXConfig();
+		if (ssxConf.getBoolean("config-sync.disable-items") && ssxConf.getBoolean("config-sync.enabled"))
+			return;
+		
 		menusLoop: for (final Map.Entry<String, FileConfiguration> menuConfigEntry :
 			Main.getConfigurationManager().getAllMenus().entrySet()) {
 
@@ -33,10 +37,14 @@ public class OnJoinListener implements Listener {
 			final String configName = menuConfigEntry.getKey();
 
 			if (!menuConfig.getBoolean("item.enabled"))
+			 {
 				continue; // Item is disabled
+			}
 
 			if (!menuConfig.getBoolean("item.on-join.enabled"))
+			 {
 				continue; // Item on join is disbled
+			}
 
 			if (menuConfig.contains("item.worlds")) {
 				// World whitelisting option is present
@@ -72,29 +80,27 @@ public class OnJoinListener implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR)
+	@EventHandler
 	public void applyEffects(final PlayerJoinEvent event) {
 		final Player player = event.getPlayer();
 		final FileConfiguration global = Main.getConfigurationManager().getGlobalConfig();
 
-		if (global.getBoolean("clear-inv", false) && !player.hasPermission("ssx.clearinvbypass")) {
-			event.getPlayer().getInventory().clear();
-		}
-
 		if (global.getBoolean("speed-on-join", false)) {
 			final int amplifier = global.getInt("speed-amplifier", 3);
 
-			if (global.getBoolean("show-particles"))
+			if (global.getBoolean("show-particles")) {
 				player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, amplifier, true));
-			else
+			} else {
 				player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, amplifier, true, false));
+			}
 		}
 
 		if (global.getBoolean("hide-self-on-join", false)) {
-			if (global.getBoolean("show-particles"))
+			if (global.getBoolean("show-particles")) {
 				player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, true));
-			else
+			} else {
 				player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, true, false));
+			}
 		}
 
 		if (global.getBoolean("hide-others-on-join", false)) {
