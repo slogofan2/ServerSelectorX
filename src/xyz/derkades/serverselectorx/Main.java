@@ -63,8 +63,6 @@ public class Main extends JavaPlugin {
 	private static Main plugin;
 
 	public static WebServer server;
-	
-	public static HDBHeads hdb;
 
 	public static Main getPlugin(){
 		return plugin;
@@ -123,10 +121,6 @@ public class Main extends JavaPlugin {
 		server.start();
 
 		this.getServer().getScheduler().runTaskLater(this, () -> this.retrieveConfigs(), 5*20);
-		
-		if (Bukkit.getPluginManager().getPlugin("HeadDatabase") != null) {
-			hdb = new HDBHeads();
-		}
 	}
 
 	@Override
@@ -172,8 +166,9 @@ public class Main extends JavaPlugin {
 							if (sender instanceof Player){
 								final Player player = (Player) sender;
 								//Small cooldown to prevent weird bugs
-								if (Cooldown.getCooldown(player.getUniqueId() + "doubleopen") > 0)
+								if (Cooldown.getCooldown(player.getUniqueId() + "doubleopen") > 0) { //if time left on cooldown is > 0
 									return true;
+								}
 
 								Cooldown.addCooldown(player.getUniqueId() + "doubleopen", 1000); //Add cooldown for 1 second
 
@@ -194,8 +189,9 @@ public class Main extends JavaPlugin {
 	void retrieveConfigs() {
 		final ConfigurationSection syncConfig = getConfigurationManager().getSSXConfig().getConfigurationSection("config-sync");
 
-		if (!syncConfig.getBoolean("enabled", false))
+		if (!syncConfig.getBoolean("enabled", false)) {
 			return;
+		}
 
 		this.getLogger().info("Config sync is enabled. Starting the configuration file retrieval process..");
 
@@ -222,9 +218,8 @@ public class Main extends JavaPlugin {
 				final BufferedReader streamReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
 				final StringBuilder responseBuilder = new StringBuilder();
 				String temp;
-				while ((temp = streamReader.readLine()) != null) {
+				while ((temp = streamReader.readLine()) != null)
 					responseBuilder.append(temp);
-				}
 				jsonOutput = responseBuilder.toString();
 			} catch (final IOException e) {
 				e.printStackTrace();
@@ -359,8 +354,9 @@ public class Main extends JavaPlugin {
 	}
 
 	public static void teleportPlayerToServer(final Player player, final String server){
-		if (Cooldown.getCooldown("servertp" + player.getName() + server) > 0)
+		if (Cooldown.getCooldown("servertp" + player.getName() + server) > 0) {
 			return;
+		}
 
 		Cooldown.addCooldown("servertp" + player.getName() + server, 1000);
 
@@ -400,9 +396,10 @@ public class Main extends JavaPlugin {
 			final long timeout = configurationManager.getGlobalConfig().getLong("server-offline-timeout", 6000);
 
 			return timeSinceLastPing < timeout;
-		} else
+		} else {
 			//If the server has not sent a message at all it is offline
 			return false;
+		}
 	}
 
 	public static int getGlobalPlayerCount() {
