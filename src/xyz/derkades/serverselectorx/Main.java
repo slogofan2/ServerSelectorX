@@ -43,14 +43,11 @@ import xyz.derkades.derkutils.Cooldown;
 import xyz.derkades.derkutils.ListUtils;
 import xyz.derkades.derkutils.bukkit.Colors;
 import xyz.derkades.derkutils.bukkit.ItemBuilder;
-import xyz.derkades.derkutils.caching.Cache;
 import xyz.derkades.serverselectorx.placeholders.Placeholders;
 import xyz.derkades.serverselectorx.placeholders.PlaceholdersDisabled;
 import xyz.derkades.serverselectorx.placeholders.PlaceholdersEnabled;
 
 public class Main extends JavaPlugin {
-
-	public static boolean BETA = false;
 
 	public static Placeholders PLACEHOLDER_API;
 
@@ -75,39 +72,21 @@ public class Main extends JavaPlugin {
 		configurationManager = new ConfigurationManager();
 		configurationManager.reload();
 
-		//Register listeners
 		Bukkit.getPluginManager().registerEvents(new SelectorOpenListener(), this);
 		Bukkit.getPluginManager().registerEvents(new OnJoinListener(), this);
 		Bukkit.getPluginManager().registerEvents(new ItemMoveDropCancelListener(), this);
 
-		//Register messaging channels
 		this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 
-		//Register command
 		this.getCommand("serverselectorx").setExecutor(new ReloadCommand());
-
-		//Start bStats
-		Stats.initialize();
-
-		//Register custom selector commands
 		this.registerCommands();
 
-		//Check if PlaceHolderAPI is installed
-		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")){
+		new Stats(this);
+
+		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
 			Main.PLACEHOLDER_API = new PlaceholdersEnabled();
-			//this.getLogger().log(Level.INFO, "PlaceholderAPI is found. Placeholders will work!");
 		} else {
 			Main.PLACEHOLDER_API = new PlaceholdersDisabled();
-			//this.getLogger().log(Level.INFO, "PlaceholderAPI is not installed. The plugin will still work.");
-		}
-
-		//Periodically clean cache
-		this.getServer().getScheduler().runTaskTimer(this, () -> {
-			Cache.cleanCache();
-		}, 30*60*20, 30*60*20);
-
-		if (this.getDescription().getVersion().contains("beta")) {
-			BETA = true;
 		}
 
 		// Disable annoying jetty warnings
@@ -166,9 +145,8 @@ public class Main extends JavaPlugin {
 							if (sender instanceof Player){
 								final Player player = (Player) sender;
 								//Small cooldown to prevent weird bugs
-								if (Cooldown.getCooldown(player.getUniqueId() + "doubleopen") > 0) { //if time left on cooldown is > 0
+								if (Cooldown.getCooldown(player.getUniqueId() + "doubleopen") > 0)
 									return true;
-								}
 
 								Cooldown.addCooldown(player.getUniqueId() + "doubleopen", 1000); //Add cooldown for 1 second
 
@@ -189,9 +167,8 @@ public class Main extends JavaPlugin {
 	void retrieveConfigs() {
 		final ConfigurationSection syncConfig = getConfigurationManager().getSSXConfig().getConfigurationSection("config-sync");
 
-		if (!syncConfig.getBoolean("enabled", false)) {
+		if (!syncConfig.getBoolean("enabled", false))
 			return;
-		}
 
 		this.getLogger().info("Config sync is enabled. Starting the configuration file retrieval process..");
 
@@ -203,7 +180,7 @@ public class Main extends JavaPlugin {
 			url = new URL("http://" + address + "/config");
 		} catch (final MalformedURLException e) {
 			this.getLogger().severe("The address you entered seems to be incorrectly formatted.");
-			this.getLogger().severe("It must be formatted like this: 173.45.16.208:8888");
+			this.getLogger().severe("It must be formatted like this: '173.45.16.208:8888'");
 			//e.printStackTrace();
 			return;
 		}
@@ -218,8 +195,9 @@ public class Main extends JavaPlugin {
 				final BufferedReader streamReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
 				final StringBuilder responseBuilder = new StringBuilder();
 				String temp;
-				while ((temp = streamReader.readLine()) != null)
+				while ((temp = streamReader.readLine()) != null) {
 					responseBuilder.append(temp);
+				}
 				jsonOutput = responseBuilder.toString();
 			} catch (final IOException e) {
 				e.printStackTrace();
@@ -227,7 +205,7 @@ public class Main extends JavaPlugin {
 			}
 
 			if (error) {
-				this.getLogger().severe("An error occured while making a request. Are you sure you are using the right IP and port? You can find a more detailed error message in the server log.");
+				this.getLogger().severe("An error occured while making a request. Are you sure you are using the right IP and port?");
 				return;
 			}
 
@@ -290,9 +268,7 @@ public class Main extends JavaPlugin {
 					}
 				}
 			} catch (final InvalidConfigurationException e) {
-				final RuntimeException e2 = new RuntimeException("The configuration received from the server is invalid");
-				e2.initCause(e);
-				throw e2;
+				throw new RuntimeException("The configuration received from the server is invalid", e);
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
@@ -354,9 +330,8 @@ public class Main extends JavaPlugin {
 	}
 
 	public static void teleportPlayerToServer(final Player player, final String server){
-		if (Cooldown.getCooldown("servertp" + player.getName() + server) > 0) {
+		if (Cooldown.getCooldown("servertp" + player.getName() + server) > 0)
 			return;
-		}
 
 		Cooldown.addCooldown("servertp" + player.getName() + server, 1000);
 
@@ -396,10 +371,9 @@ public class Main extends JavaPlugin {
 			final long timeout = configurationManager.getGlobalConfig().getLong("server-offline-timeout", 6000);
 
 			return timeSinceLastPing < timeout;
-		} else {
+		} else
 			//If the server has not sent a message at all it is offline
 			return false;
-		}
 	}
 
 	public static int getGlobalPlayerCount() {

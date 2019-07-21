@@ -6,29 +6,29 @@ import java.util.Map;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import xyz.derkades.serverselectorx.placeholders.PlaceholdersEnabled;
 
-public class Stats {
+public class Stats extends Metrics {
 
-	static void initialize() {
-		final Metrics metrics = new Metrics(Main.getPlugin());
-
+	public Stats(final JavaPlugin arg0) {
+		super(arg0);
+		
 		final Map<String, FileConfiguration> menuConfigs = Main.getConfigurationManager().getAllMenus();
 
-		metrics.addCustomChart(new Metrics.SimplePie("placeholderapi", () -> {
-			if (Main.PLACEHOLDER_API instanceof PlaceholdersEnabled) {
+		this.addCustomChart(new Metrics.SimplePie("placeholderapi", () -> {
+			if (Main.PLACEHOLDER_API instanceof PlaceholdersEnabled)
 				return "yes";
-			} else {
+			else
 				return "no";
-			}
 		}));
 
-		metrics.addCustomChart(new Metrics.SimplePie("number_of_selectors", () -> {
+		this.addCustomChart(new Metrics.SimplePie("number_of_selectors", () -> {
 			return menuConfigs.entrySet().size() + "";
 		}));
 
-		metrics.addCustomChart(new Metrics.AdvancedPie("selector_item", () -> {
+		this.addCustomChart(new Metrics.AdvancedPie("selector_item", () -> {
 			final Map<String, Integer> map = new HashMap<>();
 
 			for (final Map.Entry<String, FileConfiguration> menuConfigEntry : menuConfigs.entrySet()) {
@@ -40,7 +40,10 @@ public class Stats {
 					materialString = "disabled";
 				} else {
 					final Material material = Material.getMaterial(config.getString("item.material"));
-					if (material == null) continue; //Do not count invalid items
+					if (material == null)
+					 {
+						continue; //Do not count invalid items
+					}
 					materialString = material.toString();
 				}
 
@@ -54,7 +57,7 @@ public class Stats {
 			return map;
 		}));
 
-		metrics.addCustomChart(new Metrics.AdvancedPie("type", () -> {
+		this.addCustomChart(new Metrics.AdvancedPie("type", () -> {
 			final Map<String, Integer> map = new HashMap<>();
 
 			for (final Map.Entry<String, FileConfiguration> menuConfigEntry : menuConfigs.entrySet()) {
@@ -73,15 +76,15 @@ public class Stats {
 			return map;
 		}));
 
-		metrics.addCustomChart(new Metrics.SimplePie("ping_api", () -> {
+		this.addCustomChart(new Metrics.SimplePie("ping_api", () -> {
 			return "Premium";
 		}));
 
-		metrics.addCustomChart(new Metrics.SimplePie("updater", () -> {
+		this.addCustomChart(new Metrics.SimplePie("updater", () -> {
 			return "None";
 		}));
 
-		metrics.addCustomChart(new Metrics.AdvancedPie("server_pinging", () -> {
+		this.addCustomChart(new Metrics.AdvancedPie("server_pinging", () -> {
 			final Map<String, Integer> map = new HashMap<>();
 
 			for (final Map.Entry<String, FileConfiguration> menuConfigEntry : menuConfigs.entrySet()) {
@@ -102,31 +105,21 @@ public class Stats {
 			return map;
 		}));
 
-//		metrics.addCustomChart(new Metrics.SimplePie("permissions", () -> {
-//			if (Main.getConfigurationManager().getGlobalConfig().getBoolean("permissions-enabled", false)) {
-//				return "Enabled";
-//			} else {
-//				return "Disabled";
-//			}
-//		}));
-
-		metrics.addCustomChart(new Metrics.SimplePie("item_drop", () -> {
-			if (Main.getConfigurationManager().getGlobalConfig().getBoolean("cancel-item-drop", false)) {
+		this.addCustomChart(new Metrics.SimplePie("item_drop", () -> {
+			if (Main.getConfigurationManager().getGlobalConfig().getBoolean("cancel-item-drop", false))
 				return "Cancel";
-			} else {
+			else
 				return "Allow";
-			}
 		}));
 
-		metrics.addCustomChart(new Metrics.SimplePie("item_move", () -> {
-			if (Main.getConfigurationManager().getGlobalConfig().getBoolean("cancel-item-move", false)) {
+		this.addCustomChart(new Metrics.SimplePie("item_move", () -> {
+			if (Main.getConfigurationManager().getGlobalConfig().getBoolean("cancel-item-move", false))
 				return "Cancel";
-			} else {
+			else
 				return "Allow";
-			}
 		}));
 
-		metrics.addCustomChart(new Metrics.AdvancedPie("menu_item_slot", () -> {
+		this.addCustomChart(new Metrics.AdvancedPie("menu_item_slot", () -> {
 			final Map<String, Integer> map = new HashMap<>();
 
 			for (final Map.Entry<String, FileConfiguration> menuConfigEntry : menuConfigs.entrySet()) {
@@ -159,7 +152,7 @@ public class Stats {
 			return map;
 		}));
 
-		metrics.addCustomChart(new Metrics.AdvancedPie("rows", () -> {
+		this.addCustomChart(new Metrics.AdvancedPie("rows", () -> {
 			final Map<String, Integer> map = new HashMap<>();
 
 			for (final Map.Entry<String, FileConfiguration> menuConfigEntry : Main.getConfigurationManager().getAllMenus().entrySet()) {
@@ -176,12 +169,11 @@ public class Stats {
 			return map;
 		}));
 
-		metrics.addCustomChart(new Metrics.SimplePie("config_sync", () -> {
-			if (Main.getConfigurationManager().getSSXConfig().getBoolean("config-sync.enabled", false)) {
+		this.addCustomChart(new Metrics.SimplePie("config_sync", () -> {
+			if (Main.getConfigurationManager().getSSXConfig().getBoolean("config-sync.enabled", false))
 				return "Enabled";
-			} else {
+			else
 				return "Disabled";
-			}
 		}));
 	}
 
