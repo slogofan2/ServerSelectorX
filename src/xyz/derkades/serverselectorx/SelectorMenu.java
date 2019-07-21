@@ -51,7 +51,13 @@ public class SelectorMenu extends IconMenu {
 
 	@Override
 	public void open() {
-		this.addItems();
+		try {
+			this.addItems();
+		} catch (final Exception e) {
+			this.player.sendMessage("An error occured while opening the menu. Usually this is a config syntax error. Check the console for a stacktrace.");
+			e.printStackTrace();
+			return;
+		}
 
 		Cooldown.addCooldown(this.config.getName() + this.player.getName(), 0); //Remove cooldown if menu opened successfully
 		super.open();
@@ -202,8 +208,9 @@ public class SelectorMenu extends IconMenu {
 					for (final String subKey : subConfig.getConfigurationSection("menu").getKeys(false)){
 						final ConfigurationSection subSection = subConfig.getConfigurationSection("menu." + subKey);
 						final String subAction = subSection.getString("action", "none");
-						if (!subAction.startsWith("srv:"))
+						if (!subAction.startsWith("srv:")) {
 							continue;
+						}
 
 						final String serverName = subAction.substring(4);
 
@@ -241,6 +248,14 @@ public class SelectorMenu extends IconMenu {
 				} else {
 					builder = new ItemBuilder(owner);
 				}
+			} else if (materialString.startsWith("hdb:")) {
+				if (Main.hdb == null) {
+					this.player.sendMessage("HeadDatabase is not installed");
+					return;
+				}
+				
+				final String id = materialString.split(":")[1];
+				builder = new ItemBuilder(Main.hdb.getHead(id));
 			} else {
 				Material material;
 				try {
@@ -266,14 +281,20 @@ public class SelectorMenu extends IconMenu {
 			builder.coloredLore(PlaceholderUtil.parsePapiPlaceholders(lore, this.player, playerPlaceholder, globalOnlinePlaceholder));
 
 			// Fix unsafe amounts, then apply amounts
-			if (amount < 1 || amount > 64) amount = 1;
+			if (amount < 1 || amount > 64) {
+				amount = 1;
+			}
 			builder.amount(amount);
 
 			ItemStack item = builder.create();
 
-			if (enchanted) item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+			if (enchanted) {
+				item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+			}
 
-			if (section.getBoolean("hide-flags", false)) item = Main.addHideFlags(item);
+			if (section.getBoolean("hide-flags", false)) {
+				item = Main.addHideFlags(item);
+			}
 
 			final int slot = Integer.valueOf(key);
 
@@ -381,10 +402,11 @@ public class SelectorMenu extends IconMenu {
 					player.removePotionEffect(PotionEffectType.INVISIBILITY);
 					player.sendMessage(Colors.parseColors(Main.getConfigurationManager().getGlobalConfig().getString("invis-off")));
 				} else {
-					if (Main.getConfigurationManager().getGlobalConfig().getBoolean("show-particles"))
+					if (Main.getConfigurationManager().getGlobalConfig().getBoolean("show-particles")) {
 						player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, true));
-					else
+					} else {
 						player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, true, false));
+					}
 
 					player.sendMessage(Colors.parseColors(Main.getConfigurationManager().getGlobalConfig().getString("invis-on")));
 				}
@@ -395,10 +417,11 @@ public class SelectorMenu extends IconMenu {
 				} else {
 					final int amplifier = Main.getConfigurationManager().getGlobalConfig().getInt("speed-amplifier", 3);
 
-					if (Main.getConfigurationManager().getGlobalConfig().getBoolean("show-particles"))
+					if (Main.getConfigurationManager().getGlobalConfig().getBoolean("show-particles")) {
 						player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, amplifier, true));
-					else
+					} else {
 						player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, amplifier, true, false));
+					}
 
 					player.sendMessage(Colors.parseColors(Main.getConfigurationManager().getGlobalConfig().getString("speed-on")));
 				}
@@ -413,9 +436,9 @@ public class SelectorMenu extends IconMenu {
 			} else if (action.startsWith("msg:")){ //Send message
 				final String message = action.substring(4);
 				player.sendMessage(Main.PLACEHOLDER_API.parsePlaceholders(player, message));
-			} else if (action.equals("close")){ //Close selector
+			} else if (action.equals("close"))
 				return true; //Return true = close
-			} else if (action.equals("none")){
+			else if (action.equals("none")){
 				continue;
 			} else {
 				player.sendMessage(ChatColor.RED + "unknown action");
@@ -428,7 +451,9 @@ public class SelectorMenu extends IconMenu {
 
 	@Override
 	public void onClose(final MenuCloseEvent event) {
-		if (this.refreshTimer != null) this.refreshTimer.cancel();
+		if (this.refreshTimer != null) {
+			this.refreshTimer.cancel();
+		}
 	}
 
 }
