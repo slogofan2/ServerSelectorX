@@ -13,7 +13,7 @@ item-lore:
 - 'Line 2'
 
 # The name of the server selector item.
-item: COMPASS
+item: NETHER STAR
 data: 0
 
 # Give the item when a player joins?
